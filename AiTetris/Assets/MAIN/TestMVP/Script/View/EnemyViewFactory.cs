@@ -6,7 +6,7 @@ public class EnemyViewFactory : IEnemyViewFactory
 
 	public EnemyViewFactory()
 	{
-		var prefab = Resources.Load<GameObject>("TestMVC/Prefabs/Enemy");
+		var prefab = Resources.Load<GameObject>("TestMVP/Prefabs/Enemy");
 		if (prefab == null) Debug.Log("prefab IS NULL");
 		else Debug.Log("prefab NOT NULL");
 
