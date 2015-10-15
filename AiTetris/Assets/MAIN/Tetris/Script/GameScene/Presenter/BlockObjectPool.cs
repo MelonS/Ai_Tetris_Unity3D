@@ -2,50 +2,53 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class BlockObjectPool : MELONS.GameObjectSingleton<BlockObjectPool> 
+namespace Tetris
 {
-	public int pooledAmount = Common.Config.GROUND_COL * Common.Config.GROUND_ROW;
-	public bool willGrow = true;
-
-	private GameObject blockPrefab;
-	private List<GameObject> pooledObjects = new List<GameObject>();
-
-	private BlockObjectPool()
+	public class BlockObjectPool : MELONS.GameObjectSingleton<BlockObjectPool> 
 	{
-		name = "BlockObjectPool";
-	}
+		public int pooledAmount = Common.Config.GROUND_COL * Common.Config.GROUND_ROW;
+		public bool willGrow = true;
 
-	public void Init()
-	{
-		blockPrefab = Resources.Load<GameObject>(Common.Path.Prefabs.BLOCK);
-		if (blockPrefab == null) Debug.LogError("Not Loading BLOCK PREFAB...");
+		private GameObject blockPrefab;
+		private List<GameObject> pooledObjects = new List<GameObject>();
 
-		for (int i = 0; i < pooledAmount; ++i)
+		private BlockObjectPool()
 		{
-			GameObject obj = (GameObject)Instantiate(blockPrefab);
-			obj.SetActive(false);
-			pooledObjects.Add(obj);
+			name = "BlockObjectPool";
 		}
-	}
 
-	public GameObject GetPooledObject()
-	{
-		for (int i = 0; i < pooledObjects.Count; ++i)
+		public void Init()
 		{
-			if (!pooledObjects[i].activeInHierarchy)
+			blockPrefab = Resources.Load<GameObject>(Common.Path.Prefabs.BLOCK);
+			if (blockPrefab == null) Debug.LogError("Not Loading BLOCK PREFAB...");
+
+			for (int i = 0; i < pooledAmount; ++i)
 			{
-				return pooledObjects[i];
+				GameObject obj = (GameObject)Instantiate(blockPrefab);
+				obj.SetActive(false);
+				pooledObjects.Add(obj);
 			}
 		}
 
-		if (willGrow)
+		public GameObject GetPooledObject()
 		{
-			GameObject obj = (GameObject)Instantiate(blockPrefab);
-			obj.SetActive(false);
-			pooledObjects.Add(obj);
-			return obj;
-		}
+			for (int i = 0; i < pooledObjects.Count; ++i)
+			{
+				if (!pooledObjects[i].activeInHierarchy)
+				{
+					return pooledObjects[i];
+				}
+			}
 
-		return null;
+			if (willGrow)
+			{
+				GameObject obj = (GameObject)Instantiate(blockPrefab);
+				obj.SetActive(false);
+				pooledObjects.Add(obj);
+				return obj;
+			}
+
+			return null;
+		}
 	}
 }

@@ -67,14 +67,4 @@ public class GameManager : MELONS.GameObjectSingleton<GameManager> {
 			_viewList[i].Position = _modelList[i].Position;
 		}
 	}
-	
-//	// Use this for initialization
-//	void Start () {
-//	
-//	}
-//	
-//	// Update is called once per frame
-//	void Update () {
-//	
-//	}
 }
