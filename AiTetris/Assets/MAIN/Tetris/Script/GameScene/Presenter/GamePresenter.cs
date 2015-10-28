@@ -31,6 +31,11 @@ namespace Tetris
 		{
 			view.DestroyPiece(ID);
 		}
+
+		public void MovePieceView(int ID, Vector3 pos)
+		{
+			view.MovePiece(ID, pos);
+		}
 		#endregion
 
 		#region From View

@@ -10,7 +10,16 @@ namespace Tetris
 
 		private static int pieceID_idx = 0;
 
-		private bool[,] spawnPointMap = new bool[Common.Config.GROUND_ROW,Common.Config.GROUND_COL];
+		private enum GameState
+		{
+			IDLE = 0,
+			SPAWN,
+			DROP,
+			MERGE,
+		}
+		private GameState currentState;
+
+		private Piece currentPiece;
 
 		private GameManager()
 		{
@@ -21,32 +30,46 @@ namespace Tetris
 		{
 			Debug.Log("Tetris::GameManager Init");
 
-			for (int i = 0; i < Common.Config.GROUND_ROW; ++i)
-			{
-				for (int j = 0; j < Common.Config.GROUND_COL; ++j)
-				{
-					spawnPointMap[i,j] = false;
-				}
-			}
+			SetState(GameState.SPAWN);
 
 			StartCoroutine("Loop");
 		}
 
 		IEnumerator Loop() 
 		{
+			//state Spawn -> drop -> merge -> Spawn
+
 			while(true) 
 			{
-				yield return new WaitForSeconds(0.5f);
-
-				SpawnPiece();
+				if (GameState.IDLE == GetState()) {
+					break;
+				}else if (GameState.SPAWN == GetState()) {
+					SpawnPiece();
+					SetState(GameState.DROP);
+				}else if (GameState.DROP == GetState()) {
+					yield return new WaitForSeconds(Common.Config.DROP_SPEED);
+					DropPiece();
+				}else if (GameState.MERGE == GetState()) {
+					//TODO 
+					SetState(GameState.SPAWN);
+					yield return null;
+				}
 			}
+		}
+
+		private void SetState(GameState state)
+		{
+			currentState = state;
+		}
+
+		private GameState GetState()
+		{
+			return currentState;
 		}
 
 		private void SpawnPiece()
 		{
 			Vector3 spawnPoint = GetSpawnPoint();
-			if (spawnPoint == new Vector3(-1.0f, -1.0f, -1.0f))
-			    return;
 
 			//make piece
 			Piece piece = new Piece();
@@ -57,41 +80,35 @@ namespace Tetris
 
 			//notify to presenter, make viewpiece
 			GamePresenter.Instance.MakePieceView(piece.Position, piece.ID);
+
+			currentPiece = piece;
 		}
 
 		private Vector3 GetSpawnPoint()
 		{
-			for (int i = 0; i < 10; ++i)
-			{
-				int x = Random.Range(0, Common.Config.GROUND_ROW);
-				int y = Random.Range(0, Common.Config.GROUND_COL);
-
-				if (spawnPointMap[x,y] == false) {
-					spawnPointMap[x,y] = true;
-					return new Vector3(x, y, 0);
-				}
-			}
-
-			for (int i = 0; i < Common.Config.GROUND_ROW; ++i)
-			{
-				for (int j = 0; j < Common.Config.GROUND_COL; ++j)
-				{
-					if (spawnPointMap[i,j] == false) {
-						spawnPointMap[i,j] = true;
-						return new Vector3(i, j, 0);
-					}
-				}
-			}
-
-			return new Vector3(-1.0f, -1.0f, -1.0f);
+			int x = Random.Range(0, Common.Config.GROUND_ROW - 1);
+			int y = Common.Config.GROUND_COL;
+			return new Vector3(x, y); 
 		}
 
-		private void ResetSpawnPoint(Vector3 point)
+		private void DropPiece()
 		{
-			int x = (int)point.x;
-			int y = (int)point.y;
+			Piece piece = currentPiece;
 
-			spawnPointMap[x,y] = false;
+			if (isFloor(piece) == false) {
+				piece.Position += new Vector3(0, -1);
+			}else{
+				SetState(GameState.MERGE);
+			}
+		}
+
+		private bool isFloor(Piece piece)
+		{
+			float y = piece.Position.y;
+			if (y == 0.0f) 
+				return true;
+			else 
+				return false;
 		}
 
 		private void DestoryPiece(int ID)
@@ -116,12 +133,14 @@ namespace Tetris
 
 			//ResetSpawnPoint
 			piece.OnPositionChanged -= HandlePositionChanged;
-			ResetSpawnPoint(piece.Position);
 		}
 
 		private void HandlePositionChanged(object sender, PiecePositionChangedEventArgs e)
 		{
-
+			Piece piece = sender as Piece;
+			if (piece != null) {
+				GamePresenter.Instance.MovePieceView(piece.ID, piece.Position);
+			}
 		}
 		
 		public void PieceClicked(int ID)

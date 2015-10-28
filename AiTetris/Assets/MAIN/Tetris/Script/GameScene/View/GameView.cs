@@ -15,6 +15,18 @@ namespace Tetris
 			GamePresenter.Instance.Init(this);
 		}
 
+		private PieceView GetPieceView(int ID)
+		{
+			for (int i = 0; i < viewList.Count; ++i) {
+				PieceView v = viewList[i];
+				if (v.ID == ID) {
+					return v;
+				}
+			}
+
+			return null;
+		}
+
 		public void MakePiece(Vector3 pos, int ID)
 		{
 			GameObject viewObj = BlockObjectPool.Instance.GetPooledObject();
@@ -33,19 +45,19 @@ namespace Tetris
 
 		public void DestroyPiece(int ID)
 		{
-			PieceView view = null;	
-			foreach(PieceView v in viewList) {
-				if (v.ID == ID) {
-					viewList.Remove(v);
-					view = v;
-					break;
-				}
-			}
-
+			PieceView view = GetPieceView(ID);	
 			if (view == null) Debug.LogError("ERROR");
 
+			viewList.Remove(view);
 			view.OnClicked -= HandleClicked;
 			BlockObjectPool.Instance.UnusedPooledObject(view.gameObject);
+		}
+
+		public void MovePiece(int ID, Vector3 pos)
+		{
+			PieceView view = GetPieceView(ID);
+
+			view.gameObject.transform.position = pos; //TODO need Tweener
 		}
 
 		private void HandleClicked(object sender, PieceClickedEventArgs e)
