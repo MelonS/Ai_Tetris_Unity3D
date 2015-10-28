@@ -6,8 +6,7 @@ namespace Tetris
 {
 	public class GameManager : MELONS.GameObjectSingleton<GameManager>
 	{
-		private List<IPieceModel> modelList = new List<IPieceModel>();
-		private List<IPieceView> viewList = new List<IPieceView>();
+		private List<Piece> modelList = new List<Piece>();
 
 		private static int pieceID_idx = 0;
 
@@ -21,8 +20,6 @@ namespace Tetris
 		public void Init()
 		{
 			Debug.Log("Tetris::GameManager Init");
-
-			BlockObjectPool.Instance.Init();
 
 			for (int i = 0; i < Common.Config.GROUND_ROW; ++i)
 			{
@@ -51,26 +48,15 @@ namespace Tetris
 			if (spawnPoint == new Vector3(-1.0f, -1.0f, -1.0f))
 			    return;
 
-			//make model
-			var model = new PieceModel();
-			model.Position = spawnPoint;
-			model.ID = ++pieceID_idx;
-			modelList.Add(model);
+			//make piece
+			Piece piece = new Piece();
+			piece.Position = spawnPoint;
+			piece.ID = ++pieceID_idx;
+			piece.OnPositionChanged += HandlePositionChanged;
+			modelList.Add(piece);
 
-			//make view
-			GameObject viewObj = BlockObjectPool.Instance.GetPooledObject();
-			viewObj.transform.position = model.Position;
-			viewObj.SetActive(true);
-			viewObj.GetComponent<Renderer>().material.color = new Color(Random.Range(0.5f,0.8f),
-				                                                        Random.Range(0.3f,0.7f), 
-				                                                        Random.Range(0.2f,0.6f), 0.8f);
-
-			var view = viewObj.GetComponent<IPieceView>();
-			viewList.Add(view);
-
-			view.Position = model.Position;
-			view.ID = model.ID;
-			view.OnClicked += HandleClicked;
+			//notify to presenter, make viewpiece
+			GamePresenter.Instance.MakePieceView(piece.Position, piece.ID);
 		}
 
 		private Vector3 GetSpawnPoint()
@@ -112,37 +98,25 @@ namespace Tetris
 		{
 			Debug.Log("DestoryPiece : "+ ID);
 
-			IPieceModel imodel = null;
-			IPieceView iview = null;
+			Piece piece = null;
 
-			//model remove
-			foreach(IPieceModel m in modelList) {
-				if (m.ID == ID) {
-					modelList.Remove(m);
-					imodel = m;
+			//remove piece
+			foreach(Piece p in modelList) {
+				if (p.ID == ID) {
+					modelList.Remove(p);
+					piece = p;
 					break;
 				}
 			}
 
-			//view remove
-			foreach(IPieceView v in viewList) {
-				if (v.ID == ID) {
-					viewList.Remove(v);
-					iview = v;
-					break;
-				}
-			}
+			if (piece == null) Debug.LogError("ERROR GameManager::DestroyPiece");
 
-			if (imodel == null || iview == null) Debug.LogError("ERROR GameManager::DestroyPiece");
-
-			PieceView view = iview as PieceView;
-			if (view == null) Debug.LogError("ERROR");
-
-			view.OnClicked -= HandleClicked;
-			view.gameObject.SetActive(false);
+			//notify to presenter, remove viewpiece
+			GamePresenter.Instance.DestroyPieceView(ID);
 
 			//ResetSpawnPoint
-			ResetSpawnPoint(view.Position);
+			piece.OnPositionChanged -= HandlePositionChanged;
+			ResetSpawnPoint(piece.Position);
 		}
 
 		private void HandlePositionChanged(object sender, PiecePositionChangedEventArgs e)
@@ -150,14 +124,9 @@ namespace Tetris
 
 		}
 		
-		private void HandleClicked(object sender, PieceClickedEventArgs e)
+		public void PieceClicked(int ID)
 		{
-			IPieceView view = sender as IPieceView;
-			if (view != null) {
-				int id = view.ID;
-				Debug.Log("id : "+id);
-				DestoryPiece(id);
-			}
+			DestoryPiece(ID);
 		}
 	}
 }

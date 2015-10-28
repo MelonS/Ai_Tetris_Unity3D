@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Tetris
 {
-	public class PieceView : MonoBehaviour, IPieceView 
+	public class PieceView : MonoBehaviour
 	{
 		public event EventHandler<PieceClickedEventArgs> OnClicked = (sender, e) => {};
 		public Vector3 Position { get { return transform.position; } set { transform.position = value; } }

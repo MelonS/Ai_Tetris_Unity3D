@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Tetris
 {
-	public class PieceModel : IPieceModel
+	public class Piece
 	{
 		private Vector3 _position;
 		public event EventHandler<PiecePositionChangedEventArgs> OnPositionChanged = (sender, e) => {};

@@ -50,5 +50,10 @@ namespace Tetris
 
 			return null;
 		}
+
+		public void UnusedPooledObject(GameObject obj)
+		{
+			obj.SetActive(false);
+		}
 	}
 }
